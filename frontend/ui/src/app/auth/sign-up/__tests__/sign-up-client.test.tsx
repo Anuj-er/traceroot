@@ -178,4 +178,28 @@ describe("SignUpPage", () => {
     const link = screen.getByRole("link", { name: "Sign in" });
     expect(link.getAttribute("href")).toBe("/auth/sign-in");
   });
+
+  it("names the assistant and returns to its authorization after onboarding", async () => {
+    const callback = "/oauth/continue?response_type=code&client_id=https%3A%2F%2Fclaude.ai%2Fdoc";
+    setParams({ callbackUrl: callback });
+    mocks.signUpEmail.mockResolvedValue({ error: null });
+
+    render(
+      <SignUpClient
+        googleAuthConfigured={false}
+        connection={{ name: "Claude", verifiedHost: "claude.ai" }}
+      />,
+    );
+    expect(
+      screen.getByRole("heading", { name: "Create an account to connect Claude" }),
+    ).toBeTruthy();
+    fillForm();
+    fireEvent.click(screen.getByRole("button", { name: "Sign up" }));
+
+    await waitFor(() =>
+      expect(mocks.push).toHaveBeenCalledWith(
+        `/onboarding?callbackUrl=${encodeURIComponent(callback)}`,
+      ),
+    );
+  });
 });
